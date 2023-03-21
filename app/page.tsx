@@ -1,91 +1,98 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+"use client";
 
-const inter = Inter({ subsets: ['latin'] })
+import { storage } from "@/lib/firebase";
+import { Box, LinearProgress, Typography } from "@mui/material";
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
+import { ref, uploadBytesResumable } from 'firebase/storage';
+import { FlightData } from "@/interfaces/api";
+import FlightDataSelector from "@/components/FlightDataSelector";
+import MapView from "@/components/MapView";
 
 export default function Home() {
+  const [flightData, setFlightData] = useState<FlightData | null>(null)
+
+  if (flightData) {
+    return <MapView flightData={flightData} />
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        flexDirection: 'column',
+        gap: 5,
+        pt: '2rem',
+      }}
+    >
+      <Typography variant="h2">Flight Data Visualizer</Typography>
+      {!flightData && <FlightDataSelector setFlightData={setFlightData} />}
+      {!flightData && <Typography>Or upload data and use...</Typography>}
+      {!flightData && <UploadFile setFlightData={setFlightData} />}
+    </Box>
+  )
+}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
+const UploadFile = ({ setFlightData }: { setFlightData: Dispatch<SetStateAction<FlightData | null>> }) => {
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null)
+  const [complete, setComplete] = useState(false)
+  const [id, setId] = useState('')
 
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
+  const uploadFlightData = useCallback((flightData: File) => {
+    if (!flightData)
+      return
+    const id = new Date().getTime().toString()
+    setId(id)
+    const uploadRef = ref(storage, `flightData/${id}.csv`)
+    const uploadTask = uploadBytesResumable(uploadRef, flightData)
+    uploadTask.on('state_changed', (task) => {
+      setUploadProgress(Math.round(task.totalBytes / task.bytesTransferred) * 100)
+    }, () => { }, () => setComplete(true))
+  }, [])
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+  useEffect(() => {
+    if (!complete) return
+
+    const getData = async () => {
+      const params = new URLSearchParams([['id', id]])
+      const resp = await fetch(`api/getFlightData?${params.toString()}`)
+      if (!resp.ok) {
+        return
+      }
+      const data: FlightData = await resp.json()
+      setFlightData(data)
+    }
+    getData()
+  }, [complete, setFlightData, id])
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
+        gap: 4,
+      }}
+    >
+      <Typography variant="h4">Please upload your flight data</Typography>
+      <input
+        onChange={(e) => {
+          if (!e.target.files) return
+          uploadFlightData(e.target.files[0])
+          setUploadingFile(e.target.files[0])
+        }}
+        type="file"
+        accept=".csv"
+      />
+      {(uploadingFile && !complete) && <Typography>Uploading {uploadingFile.name}...</Typography>}
+      {(uploadingFile && !complete) &&
+        <Box sx={{ width: '40rem' }}>
+          <LinearProgress variant="determinate" value={uploadProgress} />
+        </Box>}
+      {complete && <Typography variant="h5" color={(theme) => theme.palette.success.main}>Success!</Typography>}
+    </Box>
   )
 }

@@ -3,20 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev-next": "next dev",
+    "dev": "run-p dev-next firebase-emulator",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "firebase-emulator": "firebase emulators:start --import=./.firebase-emulator-store --export-on-exit"
   },
   "dependencies": {
+    "@deck.gl/core": "^8.9.3",
+    "@deck.gl/google-maps": "^8.9.3",
+    "@deck.gl/layers": "^8.9.3",
+    "@deck.gl/react": "^8.9.3",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@googlemaps/react-wrapper": "^1.1.35",
+    "@mui/material": "^5.11.13",
     "@types/node": "18.15.3",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",
+    "deck.gl": "^8.9.3",
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
+    "firebase": "^9.18.0",
+    "neat-csv": "^7.0.0",
     "next": "13.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "typescript": "5.0.2"
+    "typescript": "5.0.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.52.3",
+    "@types/uuid": "^9.0.1",
+    "yarn-run-all": "^3.1.1"
   }
 }

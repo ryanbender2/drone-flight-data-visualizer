@@ -1,0 +1,19 @@
+{
+  "name": "flightData/1679411344880.csv",
+  "bucket": "drone-flight-data-visualizer.appspot.com",
+  "metageneration": 1,
+  "generation": 1679411345216,
+  "contentType": "text/csv",
+  "storageClass": "STANDARD",
+  "contentDisposition": "inline",
+  "downloadTokens": [
+    "d6f55d50-fd99-46b3-b03d-96971f173e60"
+  ],
+  "etag": "3BKJM+5yi0TM7PFhNMcMF7ut/ak",
+  "customMetadata": {},
+  "timeCreated": "2023-03-21T15:09:05.217Z",
+  "updated": "2023-03-21T15:09:05.217Z",
+  "size": 34161,
+  "md5Hash": "w3w93ytHAVQuJ/oyChJPbw==",
+  "crc32c": "2834655029"
+}
