@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { Status, Wrapper } from '@googlemaps/react-wrapper';
 import { Path } from '@/interfaces/map';
 import { useTheme } from '@mui/material';
+import { animateCircle } from '@/lib/tools';
 
 // Set your Google Maps API key here or via environment variable
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_APIKEY!
@@ -35,6 +36,15 @@ const MyMapComponent: React.FC<MyMapComponentProps> = ({ center, zoom, path }) =
         strokeColor: theme.palette.primary.main,
         strokeOpacity: 1.0,
         strokeWeight: 3,
+        icons: [
+            {
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 7,
+                    strokeColor: theme.palette.success.main,
+                },
+            },
+        ],
     }), [flightPlanCoordinates, theme])
 
     useEffect(() => {
@@ -53,6 +63,28 @@ const MyMapComponent: React.FC<MyMapComponentProps> = ({ center, zoom, path }) =
         });
         setMap(mapInstance)
     }, [])
+
+    useEffect(() => {
+        if (!map) return
+
+        new google.maps.Marker({
+            position: flightPlanCoordinates[0],
+            map,
+            icon: '/takeoff.png',
+            title: `Start of flight${path.name && ` - ${path.name}`}`,
+        })
+
+        new google.maps.Marker({
+            position: flightPlanCoordinates.at(-1),
+            map,
+            icon: '/landing.png',
+            title: 'End of flight',
+        })
+    }, [map, flightPlanCoordinates, path, theme])
+
+    useEffect(() => {
+        animateCircle(flightPlanOverlay)
+    }, [flightPlanOverlay])
 
     return (
         <div ref={ref} id="map" style={{ height: '100vh', width: '100wh' }} />
